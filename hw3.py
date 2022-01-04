@@ -1,12 +1,6 @@
-#!/usr/bin/env python
-# coding: utf-8
+# CSES Population Survey Voting Prediction - CSSM 502 Homework 3 
 
-# # CSES Population Survey Voting Prediction - CSSM 502 Homework 3 
-
-# # Importing the Libraries 
-
-# In[1]:
-
+#Importing the Libraries 
 
 import pandas as pd
 import numpy as np
@@ -19,50 +13,15 @@ import seaborn as sns
 from sklearn.metrics import classification_report
 from sklearn.impute import SimpleImputer
 
-
-# # Reading the Data 
-
-# In[2]:
-
-
+# Reading the Data 
 df = pd.read_csv("cses4_cut.csv") #reading the data
-
-
-# In[3]:
-
-
 df.drop(["Unnamed: 0"], axis=1, inplace=True) #unnecessary index-like column 
-
-
-# In[4]:
-
-
 df.head()
-
-
-# In[5]:
-
-
 df["voted"].value_counts() #voted value counts
-
-
-# In[6]:
-
-
 df.corr().loc['voted'] #correlation of every feature with the target
-
-
-# In[7]:
-
-
 df.columns #columns 
 
-
 # Printing the value counts for every column to see which variables are the best predictors, which have the least missing values. 
-
-# In[8]:
-
-
 for c in df.columns: 
     print ("---- %s ---" % c)
     print (df[c].value_counts()) 
@@ -127,11 +86,10 @@ for c in df.columns:
 # 28. D2030 999=10072 (Huge majority missing) 
 # 
 # 29. D2031 9=4822 (Almost half of it missing) 
-# 
-# 
-# 
+
+
 # By looking at these approximations, intuitively, we can see that;
-# 
+
 # 1.D2002 (Sex), 
 # 
 # 2.D2003 (Education),
@@ -146,42 +104,20 @@ for c in df.columns:
 # 
 # are the features with the least missing values and make theoratical sense which might suggest that we might build our model on them. 
 
-# In[9]:
-
-
 X = df[['D2002', 'D2003', 'D2010', 'D2020', 'D2021','D2024','age']]
 corr_X = df[['D2002', 'D2003', 'D2010', 'D2020', 'D2021','D2024','age','voted']]
 y = df["voted"]
 
-
-# In[10]:
-
-
-X
-
-
-# # Imputing the missing values 
-
-# Imputing the missing values with the most frequent values in the column. 
-
-# In[11]:
-
+#Imputing the missing values with the most frequent values in the column. 
 
 imp_freq_9 = SimpleImputer(missing_values=9, strategy="most_frequent")
 imp_freq_99 = SimpleImputer(missing_values=99, strategy="most_frequent")
-
-
-# In[12]:
-
 
 d2003imp = imp_freq_99.fit_transform(X["D2003"].to_numpy().reshape(-1,1))
 d2024imp = imp_freq_9.fit_transform(X["D2024"].to_numpy().reshape(-1,1))
 d2010imp = imp_freq_99.fit_transform(X["D2010"].to_numpy().reshape(-1,1))
 d2021imp = imp_freq_99.fit_transform(X["D2021"].to_numpy().reshape(-1,1))
 d2020imp = imp_freq_9.fit_transform(X["D2020"].to_numpy().reshape(-1,1));
-
-
-# In[13]:
 
 
 X["D2024"] = d2024imp
@@ -196,83 +132,41 @@ corr_X["D2020"] = d2020imp
 corr_X["D2021"] = d2021imp
 
 
-# In[14]:
-
-
 X["D2024"].value_counts() #checking...notice there are no 9's (the missing value)
-
-
-# In[15]:
 
 
 corr_X.corr().loc['voted'] #the correlations of the features to the voting behavior. 
 
 
-# # One-Hot Coding
-
-# In[16]:
-
+#One-Hot Coding
 
 voted = pd.get_dummies(y,prefix="Voted",drop_first=True)
 
-
-# In[17]:
-
-
 xdum = pd.get_dummies(data=X, columns= ['D2002', 'D2003', 'D2010', 'D2020', 'D2021','D2024'],drop_first=True)
-
-
-# In[18]:
-
 
 data =  pd.concat([xdum,voted], axis=1)
 
 
-# # Train-test split 
-
-# In[19]:
-
+#Train-test split 
 
 X = data.iloc[:,:-1]
 y = data["Voted_True"]
-
-
-# In[20]:
-
-
 Xtrain, Xtest, ytrain, ytest = train_test_split(X, y, test_size=0.33, random_state=1)
 
 
-# # Classifier Algorithms
+#Classifier Algorithms
 
-# Trying out many algorithms to find the best fit. 
+#Trying out many algorithms to find the best fit. 
 
-# ## GaussianNB Classifier
-
-# In[21]:
-
-
+#GaussianNB Classifier
 model = GaussianNB()
 model.fit(Xtrain, ytrain) 
 predictGNB = model.predict(Xtest)
-
-
-# In[22]:
-
-
 accuracy_score(ytest,predictGNB) 
-
-
-# In[23]:
-
 
 print(confusion_matrix(ytest,predictGNB)) #printing out the confusion matrix and the classification report for Gaussian Naive Bayes 
 print("\n")
 print(classification_report(ytest,predictGNB))
-
-
-# In[24]:
-
 
 np.set_printoptions(suppress=True) 
 matNB = confusion_matrix(ytest, predictGNB) 
@@ -280,52 +174,27 @@ sns.heatmap(matNB, square=True, annot=True, cbar=False,fmt="g"); #Visualizing th
 plt.xlabel('Predicted value');
 plt.ylabel('True value');
 
-
-# In[25]:
-
-
 from sklearn.model_selection import cross_val_score #GNB cross-validation score 
 np.mean(cross_val_score(model, X, y, cv=5))  
 
-
-# ### Leave One Out 
-
-# In[ ]:
-
+#Leave One Out 
 
 from sklearn.model_selection import LeaveOneOut
 scores = cross_val_score(model, X, y, cv=LeaveOneOut()) #loo
 scores
 scores.mean()
 
-
-# ## Logistic Regression 
-
-# In[27]:
-
+#Logistic Regression 
 
 from sklearn.linear_model import LogisticRegression
 lr = LogisticRegression()
 lr.fit(Xtrain,ytrain)
 predictLR = lr.predict(Xtest)
-
-
-# In[28]:
-
-
 accuracy_score(ytest,predictLR) 
-
-
-# In[29]:
-
 
 print(confusion_matrix(ytest,predictLR))
 print("\n")
 print(classification_report(ytest,predictLR)) #Logistic Regression confusion matrix and classification report
-
-
-# In[30]:
-
 
 np.set_printoptions(suppress=True) 
 matLR = confusion_matrix(ytest, predictLR)
@@ -333,33 +202,17 @@ sns.heatmap(matLR, square=True, annot=True, cbar=False,fmt="g"); #visualizing th
 plt.xlabel('Predicted value');
 plt.ylabel('True value');
 
-
-# In[31]:
-
-
 from sklearn.model_selection import cross_val_score 
 np.mean(cross_val_score(lr, X, y, cv=5))  #Logistic Regression cross-validation score  
 
 
-# ## KNeighbors Classifier
-
-# In[32]:
-
+#KNeighbors Classifier
 
 from sklearn.neighbors import KNeighborsClassifier
 model = KNeighborsClassifier(n_neighbors=7)
 model.fit(Xtrain, ytrain) 
 predictKN = model.predict(Xtest)
-
-
-# In[33]:
-
-
 accuracy_score(ytest, predictKN)
-
-
-# In[34]:
-
 
 np.set_printoptions(suppress=True)  
 matKN = confusion_matrix(ytest, predictKN) #visualizing the KNeighbors confusion matrix
@@ -367,92 +220,49 @@ sns.heatmap(matKN, square=True, annot=True, cbar=False,fmt="g");
 plt.xlabel('Predicted value');
 plt.ylabel('True value');
 
-
-# In[35]:
-
-
 print(confusion_matrix(ytest,predictKN))
 print("\n")
 print(classification_report(ytest,predictKN)) #KNeighbors confusion matrix and classification report 
 
 
-# ## Random Forest Classifier
-
-# In[36]:
-
+#Random Forest Classifier
 
 from sklearn.ensemble import RandomForestClassifier
 model = RandomForestClassifier(n_estimators=100, random_state=0)
 model.fit(Xtrain, ytrain)
 predictRF = model.predict(Xtest)
-
-
-# In[37]:
-
-
 accuracy_score(ytest,predictRF)
-
-
-# In[38]:
-
-
 np.mean(cross_val_score(model, X, y, cv=5))
-
-
-# In[39]:
-
 
 print(confusion_matrix(ytest,predictRF))
 print("\n")
 print(classification_report(ytest,predictRF)) #Random Forest confusion matrix and classification report
 
 
-# ## Support Vector Machine
-
-# In[40]:
-
-
+#Support Vector Machine
 from sklearn.svm import SVC
-
-
-# In[41]:
-
-
 model = SVC()
 model.fit(Xtrain,ytrain)
 predictSVC = model.predict(Xtest)
-
-
-# In[42]:
-
-
 accuracy_score(ytest,predictSVC)
-
-
-# In[43]:
-
 
 print(confusion_matrix(ytest,predictSVC))
 print("\n")
 print(classification_report(ytest,predictSVC)) #Seems really problematic in predicting the false voting results. 
 
 
-# # Model Tuning 
+#Model Tuning 
 
-# Here we can see that our models are predicting 1s disproportionately. The reason for that might be because the model parameters need adjusting or the model doesn't have enough False voting data to learn to classify them correctly.  We will be doing the tuning via the GridSearchCV.
+#Here we can see that our models are predicting 1s disproportionately. The reason for that might be because the model parameters need adjusting or the model doesn't have enough False voting data to learn to classify them correctly.  We will be doing the tuning via the GridSearchCV.
 
-# ## Grid Search 
+#Grid Search 
 
-# ### Tuning the SVC model
-
-# In[47]:
-
-
+#Tuning the SVC model
 from sklearn.model_selection import GridSearchCV
 
 SVC #tab + shift to explore the model parameters. 
 
-SVC(
+"""SVC(
     *,
     C=1.0, #Large C value gives you low bias but high variance.You penalize the cost of missclassification with a large C value. Smaller C value gives you high bias and low variance. 
     kernel='rbf',#Default
@@ -469,41 +279,15 @@ SVC(
     decision_function_shape='ovr',
     break_ties=False,
     random_state=None,
-)
-# In[48]:
-
+)"""
 
 param_grid = {"C":[0.1,1,10,100,1000], "gamma":[1,0.1,0.01,0.001,0.0001],'kernel': ['rbf']} 
 #This is the grid I will feed to the GridSearchCV which contains the parameters to tune 
-
-
-# In[49]:
-
-
 grid = GridSearchCV(SVC(),param_grid,verbose=3)
 grid.fit(Xtrain,ytrain)
-
-
-# In[50]:
-
-
 grid.best_params_
-
-
-# In[51]:
-
-
 grid.best_estimator_
-
-
-# In[52]:
-
-
 grid_predictions = grid.predict(Xtest)
-
-
-# In[53]:
-
 
 print(confusion_matrix(ytest,grid_predictions)) #tuning the SVC algorithm generates much better results, but still, the model needs to be improved or data sample size should be increased. 
 print("\n")
