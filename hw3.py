@@ -101,8 +101,8 @@ for c in df.columns:
 # 5.D2021(Number in Household Total),
 # 
 # 6.D2024(Religious Services Attendance),
-# 
-# are the features with the least missing values and make theoratical sense which might suggest that we might build our model on them. 
+#
+#are the features with the least missing values and make theoratical sense which might suggest that we might build our model on them. 
 
 X = df[['D2002', 'D2003', 'D2010', 'D2020', 'D2021','D2024','age']]
 corr_X = df[['D2002', 'D2003', 'D2010', 'D2020', 'D2021','D2024','age','voted']]
@@ -119,7 +119,6 @@ d2010imp = imp_freq_99.fit_transform(X["D2010"].to_numpy().reshape(-1,1))
 d2021imp = imp_freq_99.fit_transform(X["D2021"].to_numpy().reshape(-1,1))
 d2020imp = imp_freq_9.fit_transform(X["D2020"].to_numpy().reshape(-1,1));
 
-
 X["D2024"] = d2024imp
 X["D2003"] = d2003imp
 X["D2010"] = d2010imp
@@ -131,21 +130,15 @@ corr_X["D2010"] = d2010imp
 corr_X["D2020"] = d2020imp
 corr_X["D2021"] = d2021imp
 
-
 X["D2024"].value_counts() #checking...notice there are no 9's (the missing value)
-
-
 corr_X.corr().loc['voted'] #the correlations of the features to the voting behavior. 
 
 
 #One-Hot Coding
 
 voted = pd.get_dummies(y,prefix="Voted",drop_first=True)
-
 xdum = pd.get_dummies(data=X, columns= ['D2002', 'D2003', 'D2010', 'D2020', 'D2021','D2024'],drop_first=True)
-
 data =  pd.concat([xdum,voted], axis=1)
-
 
 #Train-test split 
 
@@ -205,7 +198,6 @@ plt.ylabel('True value');
 from sklearn.model_selection import cross_val_score 
 np.mean(cross_val_score(lr, X, y, cv=5))  #Logistic Regression cross-validation score  
 
-
 #KNeighbors Classifier
 
 from sklearn.neighbors import KNeighborsClassifier
@@ -224,7 +216,6 @@ print(confusion_matrix(ytest,predictKN))
 print("\n")
 print(classification_report(ytest,predictKN)) #KNeighbors confusion matrix and classification report 
 
-
 #Random Forest Classifier
 
 from sklearn.ensemble import RandomForestClassifier
@@ -238,7 +229,6 @@ print(confusion_matrix(ytest,predictRF))
 print("\n")
 print(classification_report(ytest,predictRF)) #Random Forest confusion matrix and classification report
 
-
 #Support Vector Machine
 from sklearn.svm import SVC
 model = SVC()
@@ -249,7 +239,6 @@ accuracy_score(ytest,predictSVC)
 print(confusion_matrix(ytest,predictSVC))
 print("\n")
 print(classification_report(ytest,predictSVC)) #Seems really problematic in predicting the false voting results. 
-
 
 #Model Tuning 
 
